@@ -112,7 +112,14 @@
       }
     }
 
-    // Extracts the time component of a Date object and returns a new Time object representing that time.
+    /**
+     * Extracts the time component of a Date object and returns a new Time 
+     * object representing that time.
+     * 
+     * @param _dateTime Date object from which to extract time.
+     * @returns a new Time object containing the time component of 
+     * _dateTime.
+     */
     public static timeFromDate(_dateTime:Date):Time {
       return new Time(
         _dateTime.getHours()*100+_dateTime.getMinutes(),
