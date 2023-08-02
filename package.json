@@ -16,5 +16,8 @@
     "time-only handling"
   ],
   "author": "Dan Williams",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "typedoc": "^0.24.8"
+  }
 }
