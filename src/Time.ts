@@ -26,10 +26,10 @@ export class Time {
   private _minutes: number = 0;
   private _secs: number = 0;
   private _millis: number = 0;
-  
+
   // Validation status of this Time.
   private _valid: boolean = true;
-  private _validationMessage: string='';
+  private _validationMessage: string = '';
 
   /**
    * 
@@ -56,8 +56,8 @@ export class Time {
    * clock times with no leading zeros.
    * e.g. 0,100,101,1000,1101,2045,2156,2359).
    */
-  constructor(_initialTimeOrHour: number|string);
-  
+  constructor(_initialTimeOrHour: number | string);
+
   /**
    * 
    * @param _initialTimeOrHour {@link constructor}
@@ -66,7 +66,7 @@ export class Time {
    * validation check, set this Time's isValid to false and populate
    * the _validationMessage string.
    */
-  constructor(_initialTimeOrHour: number|string, _initialMinutes?: number);
+  constructor(_initialTimeOrHour: number | string, _initialMinutes?: number);
 
   /**
    * 
@@ -77,8 +77,8 @@ export class Time {
    * validation check, set this Time's isValid to false and populate
    * the _validationMessage string.
    */
-  constructor(_initialTimeOrHour: number|string, _initialMinutes?: number, _initialSeconds?: number);
-  
+  constructor(_initialTimeOrHour: number | string, _initialMinutes?: number, _initialSeconds?: number);
+
   /**
    * 
    * @param _initialTimeOrHour {@link constructor}
@@ -89,10 +89,10 @@ export class Time {
    * validation check, set this Time's isValid to false and populate
    * the _validationMessage string.
    */
-  constructor(_initialTimeOrHour: number|string, _initialMinutes?: number, _initialSeconds?: number, _initialMillis?: number);
-  
-  constructor(_initialTimeOrHour: number|string, _initialSeconds?: number, _initialMinutes?: number, _initialMillis?: number) {
-    if(!this.isValidTime(_initialTimeOrHour,_initialMinutes,_initialSeconds,_initialMillis)){
+  constructor(_initialTimeOrHour: number | string, _initialMinutes?: number, _initialSeconds?: number, _initialMillis?: number);
+
+  constructor(_initialTimeOrHour: number | string, _initialSeconds?: number, _initialMinutes?: number, _initialMillis?: number) {
+    if (!this.isValidTime(_initialTimeOrHour, _initialMinutes, _initialSeconds, _initialMillis)) {
       this._hours = 0;
       this._minutes = 0;
       this._secs = 0;
@@ -101,7 +101,7 @@ export class Time {
       return;
     }
 
-    if(typeof _initialTimeOrHour === 'number') {
+    if (typeof _initialTimeOrHour === 'number') {
       this._hours = _initialTimeOrHour;
       this._minutes = (typeof _initialMinutes !== 'undefined') ? _initialMinutes : this._minutes;
       this._secs = (typeof _initialSeconds !== 'undefined') ? _initialSeconds : this._secs;
@@ -109,12 +109,12 @@ export class Time {
       return;
     }
 
-    if(typeof _initialTimeOrHour === 'string') {
+    if (typeof _initialTimeOrHour === 'string') {
       const match = Time.TIME_VALIDATING_REGEX.exec(_initialTimeOrHour);
-      
+
       // Since we have already validated the string, we should theoretically not have to 
       // test for match but TypeScript needs to be sure so...
-      if(match) {
+      if (match) {
         /**
          * In the case of 24-hour clock time, the match[] array will look as follows:
          *  match[0] == <full match>
@@ -135,7 +135,7 @@ export class Time {
 
         let timeDiddle = +match[1];
 
-        if(ampm != -1 && match[ampm].toUpperCase() === 'PM') {
+        if (ampm != -1 && match[ampm].toUpperCase() === 'PM') {
           timeDiddle += (timeDiddle !== 12) ? 12 : 0;
         }
 
@@ -147,7 +147,7 @@ export class Time {
     }
   }
 
-  
+
   /**
    * 
    * @param _timeOrHoursToValidate string or whole number representing a time. 
@@ -181,21 +181,21 @@ export class Time {
    * @returns true if parameters passed represent a valid time, false
    * if not.
    */
-  public isValidTime(_timeOrHoursToValidate: string|number, _minutesToValidate?: number, _secondsToValidate?: number, _millisecondsToValidate?: number): boolean {
-    if(typeof _timeOrHoursToValidate === 'string'){
-      if(Time.TIME_VALIDATING_REGEX.test(_timeOrHoursToValidate)){
+  public isValidTime(_timeOrHoursToValidate: string | number, _minutesToValidate?: number, _secondsToValidate?: number, _millisecondsToValidate?: number): boolean {
+    if (typeof _timeOrHoursToValidate === 'string') {
+      if (Time.TIME_VALIDATING_REGEX.test(_timeOrHoursToValidate)) {
         return true;
       } else {
         this._validationMessage = 'Invalid time string. Valid time formats are: hh:mi[:ss[.ms]][ ][AM|am|Am|aM|PM|pm|Pm|pM].';
         return false;
       }
     }
-    
-    if(typeof _timeOrHoursToValidate === 'number') {
+
+    if (typeof _timeOrHoursToValidate === 'number') {
       // First either 0 hours or 2359 hours is a valid nnumber to use as 
       //a time.
-      if(_timeOrHoursToValidate < 0 || _timeOrHoursToValidate > 23) {
-        this._validationMessage = 'Invalid numeric hours value ['+_timeOrHoursToValidate+'] - out of range. Valid values are 0-23';
+      if (_timeOrHoursToValidate < 0 || _timeOrHoursToValidate > 23) {
+        this._validationMessage = 'Invalid numeric hours value [' + _timeOrHoursToValidate + '] - out of range. Valid values are 0-23';
         return false;
       }
 
@@ -203,29 +203,29 @@ export class Time {
       // is a valid time but it will fail mod (%) checks. Assuming 
       // if _minutesToValidate is undefined then seconds and 
       // millis will be too.
-      if(_timeOrHoursToValidate === 0 
+      if (_timeOrHoursToValidate === 0
         && typeof _minutesToValidate === 'undefined') {
-          return true;
+        return true;
       }
 
       // Valid minutes-in-hour range is 0-59.
-      if(_minutesToValidate && (_minutesToValidate < 0 || _minutesToValidate > 59)) {
-        this._validationMessage = 'Invalid minutes part of time value ['+_minutesToValidate+'] - out of range. Valid minute values are 0-59'; 
-          return false;
+      if (_minutesToValidate && (_minutesToValidate < 0 || _minutesToValidate > 59)) {
+        this._validationMessage = 'Invalid minutes part of time value [' + _minutesToValidate + '] - out of range. Valid minute values are 0-59';
+        return false;
       }
 
       // Valid seconds-in-minute can only be 0-59.
-      if(_secondsToValidate
-        && (_secondsToValidate <0 || _secondsToValidate>59)) {
-          this._validationMessage = 'Invalid seconds value ['+_secondsToValidate+'] - out of range. Valid seconds values are 0-59'; 
-          return false;
+      if (_secondsToValidate
+        && (_secondsToValidate < 0 || _secondsToValidate > 59)) {
+        this._validationMessage = 'Invalid seconds value [' + _secondsToValidate + '] - out of range. Valid seconds values are 0-59';
+        return false;
       }
 
       // Valid milliseconds-in-second can only be 0-999.
-      if(typeof _millisecondsToValidate !== 'undefined'
-        && (_millisecondsToValidate<0 || _millisecondsToValidate>999)) {
-          this._validationMessage = 'Invalid milliseconds value ['+_millisecondsToValidate+'] - out of range. Valid milliseconds values are 0-999'; 
-          return false;
+      if (typeof _millisecondsToValidate !== 'undefined'
+        && (_millisecondsToValidate < 0 || _millisecondsToValidate > 999)) {
+        this._validationMessage = 'Invalid milliseconds value [' + _millisecondsToValidate + '] - out of range. Valid milliseconds values are 0-999';
+        return false;
       }
     }
 
@@ -253,15 +253,15 @@ export class Time {
    * @returns this Time object's milliseconds component as a positive 
    * integer between 0 and 999.
   */
-  get milliseconds():number {
+  get milliseconds(): number {
     return this._millis;
   }
-  
+
   /**
    * @returns this Time object's seconds component as a positive nteger 
    * between 0 and 59.
    */
-  get seconds():number {
+  get seconds(): number {
     return this._secs;
   }
 
@@ -270,7 +270,7 @@ export class Time {
    */
   get asTodaysDate(): Date {
     const date = new Date();
-    date.setHours(this.hours,this.minutes,this.seconds,this.milliseconds);
+    date.setHours(this.hours, this.minutes, this.seconds, this.milliseconds);
     return date;
   }
 
@@ -279,7 +279,7 @@ export class Time {
    * valid and false for invalid.
    * 
    */
-  get isValid(): boolean{
+  get isValid(): boolean {
     return this._valid;
   }
 
@@ -307,13 +307,13 @@ export class Time {
    * @returns a new Date object with its time components (hours, minutes, seconda and 
    * milliseconds) set to those of this Time.
    */
-  public static timeFromDate(_dateTime:Date):Time {
+  public static timeFromDate(_dateTime: Date): Time {
     return new Time(
-      _dateTime.getHours()*100+_dateTime.getMinutes(),
+      _dateTime.getHours() * 100 + _dateTime.getMinutes(),
       _dateTime.getSeconds(),
       _dateTime.getMilliseconds());
   }
-  
+
 
   /**
    * 
@@ -323,101 +323,137 @@ export class Time {
    * Time. The input date's time value will be replaced by
    * this Time object's time value in the new Date object returned.
    */
- public dateWithThisTime(_date:Date):Date{
-   const newDate = new Date(_date);
-   newDate.setHours(this.hours,this.minutes,this.seconds,this.milliseconds);
-   return newDate;
- }
+  public dateWithThisTime(_date: Date): Date {
+    const newDate = new Date(_date);
+    newDate.setHours(this.hours, this.minutes, this.seconds, this.milliseconds);
+    return newDate;
+  }
 
- /**
-  * @returns a whole number representing this Time in milliseconds since
-  * midnight.
-  */
- get milliSecondsSinceMidnight(): number {
-   return (this.hours*Time.MILLISECONDS_IN_HOUR)
-     + (this.minutes*Time.MILLISECONDS_IN_MINUTE)
-     + (this.seconds*Time.MILLISECONDS_IN_SECOND)
-     + this.milliseconds;
- }
 
- /**
-  * Adds (or subtracts) the hours, minutes, seconds and milliseconds 
-  * passed to this Time. 
-  * 
-  * The method adds all defined parameters into a single millisecond 
-  * total then adds this total to this Time.
-  * 
-  * BEWARE:  If the total milliseconds in all supplied paramaters total 
-  * more than a day, the resulting time will be the time of day in a 
-  * past or future day the date / time addition results in. But since
-  * this is a Time only class, only the time part of that day will be 
-  * represented. So the increment / decrement may appear smaller than 
-  * expected or as an increment when the user expected a decrement and
-  * vice versa.
-  * 
-  * EXAMPLE 1: this Time is currently 9:00:00.000 AM
-  * Passing _hours=-1, _minutes=0, _seconds=0, milliseconds=172,800,000 
-  * The resulting new value of this Time would be 8:00:00.000 AM. 
-  * This is because 172,800,000 is 48 hours. So while -1 hours will be 
-  * added, 48 hours will also be added resulting in 8:00 AM in two 
-  * days time. But since this is a Time class only, no indication of 
-  * the additional days is given. Thus, time will appear to have been
-  * decremented.
-  * 
-  * EXAMPLE 2: this Time = 11:54:23.999 AM
-  * Passing _hours=-72, _minutes=0,_seconds=90, _milliseconds=0 
-  * This Time will be set to 11:55:53.999.
-  * This is because -72 hours is exactly 3 days. Days are not 
-  * represented in the Time class so we are effectively arriving at 
-  * 11:54:23.999 three days earlier then adding 90 seconds to that 
-  * time, resulting in a 90 second net increment to this Time (since
-  * no day parts are retained).
-  * 
-  * Finally, if the sum of all parameters adds up to zero (0) 
-  * milliseconds, the method will silently return and nothing will
-  * change.
-  * 
-  * @param _hours number of hours to add (-ve or +ve). Digits to 
-  * the right of any decimal point will be ignored per Math.floor().
-  * @param _minutes number of minutes (-ve or +ve). Digits to the right 
-  * of any decimal point will be ignored per Math.floor().
-  * @param _seconds number of seconds (-ve or +ve). Digits to the right 
-  * of any decimal point will be ignored per Math.floor().
-  * @param _milliseconds number of minutes (-ve or +ve). Digits to the 
-  * right of any decimal point will be ignored per Math.floor().
-  */
- public addTime(_hours:number,_minutes?:number,_seconds?:number,_milliseconds?:number) {
-   const intHours = this.timeToInteger(_hours);
-   const intMinutes = this.timeToInteger((_minutes)?_minutes:0);
-   const intSeconds = this.timeToInteger((_seconds)?_seconds:0);
-   const intMilliseconds = this.timeToInteger((_milliseconds)?_milliseconds:0);
+  /**
+   * @returns a whole number representing this Time in milliseconds since
+   * midnight.
+   */
+  get milliSecondsSinceMidnight(): number {
+    return (this.hours * Time.MILLISECONDS_IN_HOUR)
+      + (this.minutes * Time.MILLISECONDS_IN_MINUTE)
+      + (this.seconds * Time.MILLISECONDS_IN_SECOND)
+      + this.milliseconds;
+  }
+
+  /**
+   * @returns this Time's seconds value divided by 
+   * {@link Time.SECONDS_IN_MINUTE} to give a decimal fraction representing 
+   * the fraction of time through the hour this Time represents. This may 
+   * be useful in positioning UI components meant to visually align with 
+   * time measures on a page. 
+   */
+  get secondsAsDecimalFractionOfMinute(): number {
+    return (this.seconds === 0) ? 0 : this.seconds / Time.SECONDS_IN_MINUTE;
+  }
+
+  /**
+   * @returns this Time's minutes value divided by 
+   * {@link Time.MINUTES_IN_HOUR} to give a decimal fraction representing 
+   * the fraction of time through the hour this Time represents. This may 
+   * be useful in positioning UI components meant to visually align with 
+   * time measures on a page. 
+   */
+  get minutesAsDecimalFractionOfHour(): number {
+    return (this.minutes === 0) ? 0 : this.minutes / Time.MINUTES_IN_HOUR;
+  }
+
+  /**
+   * @returns this Time's millisecondsSinceMidnight value divided by 
+   * {@link Time.MILLISECONDS_IN_DAY} to give a decimal fraction 
+   * representing the fraction of a day this Time represents. This may be 
+   * useful in positioning UI components meant to visually align with time 
+   * measures on a page.
+   */
+  get asDecimalFractionOfDay(): number {
+    if (this.milliSecondsSinceMidnight === 0) return 0;
+
+    return this.milliSecondsSinceMidnight / Time.MILLISECONDS_IN_DAY;
+  }
+
+  /**
+   * Adds (or subtracts) the hours, minutes, seconds and milliseconds 
+   * passed to this Time. 
+   * 
+   * The method adds all defined parameters into a single millisecond 
+   * total then adds this total to this Time.
+   * 
+   * BEWARE:  If the total milliseconds in all supplied paramaters total 
+   * more than a day, the resulting time will be the time of day in a 
+   * past or future day the date / time addition results in. But since
+   * this is a Time only class, only the time part of that day will be 
+   * represented. So the increment / decrement may appear smaller than 
+   * expected or as an increment when the user expected a decrement and
+   * vice versa.
+   * 
+   * EXAMPLE 1: this Time is currently 9:00:00.000 AM
+   * Passing _hours=-1, _minutes=0, _seconds=0, milliseconds=172,800,000 
+   * The resulting new value of this Time would be 8:00:00.000 AM. 
+   * This is because 172,800,000 is 48 hours. So while -1 hours will be 
+   * added, 48 hours will also be added resulting in 8:00 AM in two 
+   * days time. But since this is a Time class only, no indication of 
+   * the additional days is given. Thus, time will appear to have been
+   * decremented.
+   * 
+   * EXAMPLE 2: this Time = 11:54:23.999 AM
+   * Passing _hours=-72, _minutes=0,_seconds=90, _milliseconds=0 
+   * This Time will be set to 11:55:53.999.
+   * This is because -72 hours is exactly 3 days. Days are not 
+   * represented in the Time class so we are effectively arriving at 
+   * 11:54:23.999 three days earlier then adding 90 seconds to that 
+   * time, resulting in a 90 second net increment to this Time (since
+   * no day parts are retained).
+   * 
+   * Finally, if the sum of all parameters adds up to zero (0) 
+   * milliseconds, the method will silently return and nothing will
+   * change.
+   * 
+   * @param _hours number of hours to add (-ve or +ve). Digits to 
+   * the right of any decimal point will be ignored per Math.floor().
+   * @param _minutes number of minutes (-ve or +ve). Digits to the right 
+   * of any decimal point will be ignored per Math.floor().
+   * @param _seconds number of seconds (-ve or +ve). Digits to the right 
+   * of any decimal point will be ignored per Math.floor().
+   * @param _milliseconds number of minutes (-ve or +ve). Digits to the 
+   * right of any decimal point will be ignored per Math.floor().
+   */
+  public addTime(_hours: number, _minutes?: number, _seconds?: number, _milliseconds?: number) {
+    const intHours = this.timeToInteger(_hours);
+    const intMinutes = this.timeToInteger((_minutes) ? _minutes : 0);
+    const intSeconds = this.timeToInteger((_seconds) ? _seconds : 0);
+    const intMilliseconds = this.timeToInteger((_milliseconds) ? _milliseconds : 0);
     // First sum everything into a millisecond total.
-   const mightyMillisecondTotal = (intHours * Time.MILLISECONDS_IN_HOUR) 
-     + (intMinutes * Time.MILLISECONDS_IN_MINUTE)
-     + (intSeconds * Time.MILLISECONDS_IN_SECOND)
-     + intMilliseconds;
+    const mightyMillisecondTotal = (intHours * Time.MILLISECONDS_IN_HOUR)
+      + (intMinutes * Time.MILLISECONDS_IN_MINUTE)
+      + (intSeconds * Time.MILLISECONDS_IN_SECOND)
+      + intMilliseconds;
     // Do nothing if total milliseconds === 0;
-   if(mightyMillisecondTotal === 0) return;
+    if (mightyMillisecondTotal === 0) return;
     // Here begins the trickiness. A day is 86400000ms long. But the
-   // current Time may be less than that number of milliseconds away
-   // from the start or finish of the day. So we must arrive at a 
-   // milliseconds from midnight value whichever direction the summing
-   // of now and the milliseconds to add goes (-ve or +ve).
-   
-   // First Discard any whole days and the remaining milliseconds to 
-   // this Time then round the result since we can only work with
-   // integer numbers of milliseconds.
-   let milliSecondsToAdd = Math.round((Time.MILLISECONDS_IN_DAY * ((mightyMillisecondTotal / Time.MILLISECONDS_IN_DAY)%1)));
-   
-   const theReaminsOfTheDay = Time.MILLISECONDS_IN_DAY - this.milliSecondsSinceMidnight;
-    
-   let finalTime = 0;
+    // current Time may be less than that number of milliseconds away
+    // from the start or finish of the day. So we must arrive at a 
+    // milliseconds from midnight value whichever direction the summing
+    // of now and the milliseconds to add goes (-ve or +ve).
 
-   // We need to do different stuff depending on whether we are adding
-   // or subtracting milliseconds.
-   if(milliSecondsToAdd<0) {
+    // First Discard any whole days and the remaining milliseconds to 
+    // this Time then round the result since we can only work with
+    // integer numbers of milliseconds.
+    let milliSecondsToAdd = Math.round((Time.MILLISECONDS_IN_DAY * ((mightyMillisecondTotal / Time.MILLISECONDS_IN_DAY) % 1)));
+
+    const theReaminsOfTheDay = Time.MILLISECONDS_IN_DAY - this.milliSecondsSinceMidnight;
+
+    let finalTime = 0;
+
+    // We need to do different stuff depending on whether we are adding
+    // or subtracting milliseconds.
+    if (milliSecondsToAdd < 0) {
       // This is the easy case where we don't go earlier than midnight.
-      if(Math.abs(milliSecondsToAdd) <= this.milliSecondsSinceMidnight) {
+      if (Math.abs(milliSecondsToAdd) <= this.milliSecondsSinceMidnight) {
         finalTime = this.milliSecondsSinceMidnight + milliSecondsToAdd;
       } else {
         // First subtract down to midnight then subtract from midnight
@@ -435,31 +471,31 @@ export class Time {
       // number so we are moving forward past the next midnight.
 
       // This is the easy case where we don't go later than midnight.
-      if(Math.abs(milliSecondsToAdd) <= theReaminsOfTheDay) {
+      if (Math.abs(milliSecondsToAdd) <= theReaminsOfTheDay) {
         finalTime = this.milliSecondsSinceMidnight + milliSecondsToAdd;
       } else {
         // We're going forward past midnight.
         finalTime = Time.MILLISECONDS_IN_DAY + (milliSecondsToAdd - theReaminsOfTheDay)
       }
     }
-    
+
     // Now we have the new total milliseconds since midnight value of
     // this time. As we work out the hours, minutes and seconds to add, 
     // we decrement the millisecond total so we don't add it multiple 
     // times.
-    
+
     // Hours
     const newHours = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_HOUR) * 100;
-    
-    finalTime -= newHours*Time.MILLISECONDS_IN_HOUR;
-    
+
+    finalTime -= newHours * Time.MILLISECONDS_IN_HOUR;
+
     const newMinutes = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_MINUTE);
 
-    finalTime -= newMinutes*Time.MILLISECONDS_IN_MINUTE;
+    finalTime -= newMinutes * Time.MILLISECONDS_IN_MINUTE;
 
     const newSeconds = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_SECOND);
 
-    const newMilliseconds = finalTime - this.timeToInteger(newSeconds*Time.MILLISECONDS_IN_SECOND);
+    const newMilliseconds = finalTime - this.timeToInteger(newSeconds * Time.MILLISECONDS_IN_SECOND);
 
     this._hours = newHours;
     this._minutes = newMinutes;
@@ -472,7 +508,7 @@ export class Time {
    * @param _time a number with a potential decimal part.
    * @returns The floor of the number.
    */
-  private timeToInteger(_time:number):number {
+  private timeToInteger(_time: number): number {
     return Math.floor(_time);
   }
 }
