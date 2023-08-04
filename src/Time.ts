@@ -45,16 +45,9 @@ export class Time {
    * The AM / PM indicator is case insensitive and the space between
    * the time and AM/PM may be omitted. 
    * 
-   * In the number form, hours are the hundreds part and minutes are 
-   * the tens part. When the number form is used and the optional 
-   * parameters are omitted (see below for details on the optional 
-   * parameters), the seconds and milliseconds of this Time will both 
-   * be set to zero (0).
-   * 
-   * Invalid values (e.g. 999, 777) will fail the validation check.
-   * Valid values are numbers that look visually similar to 24-hour 
-   * clock times with no leading zeros.
-   * e.g. 0,100,101,1000,1101,2045,2156,2359).
+   * In the number form, the number represents hours-in-day (per typescript Date). The valid
+   * range of hours is 0-23. When used in the number form, the value will always be assumed
+   * to represent a 24-hour clock hours number.
    */
   constructor(_initialTimeOrHour: number | string);
 
@@ -125,8 +118,9 @@ export class Time {
          *  match[4] == 'ms'|undefined (0-999 | undefined)
          * 
          * In the case of a 12-hour clock time, the match[] array will look as follows:
-         *  match[0] = 'hh' (01-12)
-         *  match[1] = 'mm' (00-59)
+         *  match[0] = <full match>
+         *  match[1] = 'hh' (01-12)
+         *  match[2] = 'mm' (00-59)
          *  match[3] == 'ss'|undefined (00-59 | undefined)
          *  match[4] == 'ms'|undefined (0-999 | undefined)
          *  match[5] (toUpperCase()) == 'AM|PM'
