@@ -306,7 +306,8 @@ export class Time {
    */
   public static timeFromDate(_dateTime: Date): Time {
     return new Time(
-      _dateTime.getHours(), _dateTime.getMinutes(),
+      _dateTime.getHours(), 
+      _dateTime.getMinutes(),
       _dateTime.getSeconds(),
       _dateTime.getMilliseconds());
   }
