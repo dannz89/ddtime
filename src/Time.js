@@ -2,67 +2,82 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Time = void 0;
 /**
- * Represents the time in a day (beginning at midnight) with no Date
- * part. The time is effectively stored in 24-hour format. Additiion
- * (and subtraction) are possible via the {@link Time|addTime} method.
- */
+   * Represents the time in a day (beginning at midnight) with no Date
+   * part. The time is effectively stored in 24-hour format. Additiion
+   * (and subtraction) are possible via the {@link Time|addTime} method.
+   */
 class Time {
-    constructor(_initialTime, _initialSeconds, _initialMillis) {
+    constructor(_initialTimeOrHour, _initialMinutes, _initialSeconds, _initialMillis) {
         // Time stores hours and minutes. This can be between 0 and 2359. 
         // Because of privacy and the validation rules, it will only ever be 
         // values resembling 24-hour clock hours and minutes times e.g. 900, 
         // 901, ..., 959, ..., 2359. Although it is a normal number,
         // it will never containe values not resembling hour-and-minute 
         // 24-hour clock times such as 999, 777, 199, 99 etc.
-        this._time = 0; //0=midnight.
-        // Mills and secs stored separately.
+        this._hours = 0;
+        this._minutes = 0;
         this._secs = 0;
         this._millis = 0;
         // Validation status of this Time.
         this._valid = true;
         this._validationMessage = '';
-        if (!this.isValidTime(_initialTime, _initialSeconds, _initialMillis)) {
-            this._time = 0;
+        if (!this.isValidTime(_initialTimeOrHour, _initialMinutes, _initialSeconds, _initialMillis)) {
+            this._hours = 0;
+            this._minutes = 0;
             this._secs = 0;
             this._millis = 0;
             this._valid = false;
             return;
         }
-        if (typeof _initialTime === 'number') {
-            this._time = _initialTime;
+        if (typeof _initialTimeOrHour === 'number') {
+            this._hours = _initialTimeOrHour;
+            this._minutes = (typeof _initialMinutes !== 'undefined') ? _initialMinutes : this._minutes;
             this._secs = (typeof _initialSeconds !== 'undefined') ? _initialSeconds : this._secs;
             this._millis = (typeof _initialMillis !== 'undefined') ? _initialMillis : this._millis;
+            this._validationMessage = 'Time is valid.';
+            return;
         }
-        if (typeof _initialTime === 'string') {
-            const match = Time.TIME_VALIDATING_REGEX.exec(_initialTime);
+        if (typeof _initialTimeOrHour === 'string') {
+            const match = Time.TIME_VALIDATING_REGEX.exec(_initialTimeOrHour);
             // Since we have already validated the string, we should theoretically not have to 
             // test for match but TypeScript needs to be sure so...
             if (match) {
-                const ampm = match.findIndex(e => (e.toUpperCase() === 'AM' || e.toUpperCase() === 'PM'));
-                let timeDiddle = +match[1];
-                if (ampm != -1 && match[ampm].toUpperCase() === 'PM') {
-                    timeDiddle += (timeDiddle < 12) ? 12 : 0;
+                /**
+                 * In the case of 24-hour clock time, the match[] array will look as follows:
+                 *  match[0] == <full match>
+                 *  match[1] == 'hh' (00-23)
+                 *  match[2] == 'mm' (00-59)
+                 *  match[3] == 'ss'|undefined (00-59 | undefined)
+                 *  match[4] == 'ms'|undefined (0-999 | undefined)
+                 *
+                 * In the case of a 12-hour clock time, the match[] array will look as follows:
+                 *  match[0] = 'hh' (01-12)
+                 *  match[1] = 'mm' (00-59)
+                 *  match[3] == 'ss'|undefined (00-59 | undefined)
+                 *  match[4] == 'ms'|undefined (0-999 | undefined)
+                 *  match[5] (toUpperCase()) == 'AM|PM'
+                 *
+                 */
+                let ampm = match.find(e => typeof e !== 'undefined' && (e.toUpperCase() === 'AM' || e.toUpperCase() === 'PM'));
+                if (typeof ampm !== 'undefined') {
+                    ampm = ampm.toUpperCase();
                 }
-                this._time = (timeDiddle * 100) + +match[2];
-                this._secs = (typeof match[3] !== 'undefined') ? +match[3] : 0;
-                this._millis = (typeof match[4] !== 'undefined') ? +match[4] : 0;
+                const filteredMatches = Array.from(match).filter((m) => m !== undefined && m.toUpperCase() !== 'AM' && m.toUpperCase() !== 'PM');
+                let timeDiddle = (typeof filteredMatches[1] !== 'undefined') ? +filteredMatches[1] : 0;
+                if (ampm === 'PM') {
+                    timeDiddle += (timeDiddle !== 12) ? 12 : 0;
+                }
+                this._hours = timeDiddle;
+                this._minutes = (typeof filteredMatches[2] !== 'undefined') ? +filteredMatches[2] : 0;
+                this._secs = (typeof filteredMatches[3] !== 'undefined') ? +filteredMatches[3] : 0;
+                this._millis = (typeof filteredMatches[4] !== 'undefined') ? +filteredMatches[4] : 0;
             }
         }
     }
     /**
-     * Extracts the time component of a Date object and returns a new Time
-     * object representing that time.
      *
-     * @param _dateTime Date object from which to extract time.
-     * @returns a new Time object containing the time component of
-     * _dateTime.
-     */
-    static timeFromDate(_dateTime) {
-        return new Time(_dateTime.getHours() * 100 + _dateTime.getMinutes(), _dateTime.getSeconds(), _dateTime.getMilliseconds());
-    }
-    /**
-     *
-     * @param _timeToValidate string or whole number representing a time.
+     * @param _timeOrHoursToValidate string  representing a formatted time
+     * or whole number representing hours in a day (0-23).
      *
      * The string version is time formatted in either 12 or 24 hour
      * format. The longest 24-hour form is hh:mi[:ss[.ms]]
@@ -76,16 +91,11 @@ class Time {
      *
      * The string value is tested using regex.
      *
-     * In the number form, hours are the hundreds part and minutes are
-     * the tens part. When the number form is used and the optional
-     * parameters are omitted (see below for details on the optional
-     * parameters), the seconds and milliseconds of this Time will both
-     * be set to zero (0).
+     * In the number form, the valid range is 0-23 (per 24-our clock). This value will always
+     * be treated as a 24-hour clock hours value. When the number form is used and the optional
+     * parameters are omitted (see below for details on the optional parameters), the seconds
+     * and milliseconds of this Time will both be set to zero (0).
      *
-     * Invalid values (e.g. 999, 777) will fail the validation check.
-     * Valid values are numbers that look visually similar to 24-hour
-     * clock times with no leading zeros.
-     * e.g. 0,100,101,1000,1101,2045,2156,2359).
      * @param _secondsToValidate Initial seconds component of this Time.
      * Valid values are 0-59.
      * @param _millisecondsToValidate Initial milliseconds component of this Time.
@@ -93,9 +103,9 @@ class Time {
      * @returns true if parameters passed represent a valid time, false
      * if not.
      */
-    isValidTime(_timeToValidate, _secondsToValidate, _millisecondsToValidate) {
-        if (typeof _timeToValidate === 'string') {
-            if (Time.TIME_VALIDATING_REGEX.test(_timeToValidate)) {
+    isValidTime(_timeOrHoursToValidate, _minutesToValidate, _secondsToValidate, _millisecondsToValidate) {
+        if (typeof _timeOrHoursToValidate === 'string') {
+            if (Time.TIME_VALIDATING_REGEX.test(_timeOrHoursToValidate)) {
                 return true;
             }
             else {
@@ -103,35 +113,33 @@ class Time {
                 return false;
             }
         }
-        if (typeof _timeToValidate === 'number') {
+        if (typeof _timeOrHoursToValidate === 'number') {
             // First either 0 hours or 2359 hours is a valid nnumber to use as 
             //a time.
-            if (_timeToValidate < 0 || _timeToValidate > 2359) {
-                this._validationMessage = 'Invalid numeric time value [' + _timeToValidate + '] - out of range. Valid values are 0-2359';
+            if (_timeOrHoursToValidate < 0 || _timeOrHoursToValidate > 23) {
+                this._validationMessage = 'Invalid numeric hours value [' + _timeOrHoursToValidate + '] - out of range. Valid values are 0-23';
                 return false;
             }
-            // Special case, 0 (with no seconds or millis) is a valid time but 
-            // it will fail mod (%) checks. Assuming if _secondsToValidate is 
-            // undefined then millis will be too.
-            if (_timeToValidate === 0
-                && typeof _secondsToValidate === 'undefined') {
+            // Special case, 0 (with no minutes, seconds or milliseconds) 
+            // is a valid time but it will fail mod (%) checks. Assuming 
+            // if _minutesToValidate is undefined then seconds and 
+            // millis will be too.
+            if (_timeOrHoursToValidate === 0
+                && typeof _minutesToValidate === 'undefined') {
                 return true;
             }
-            // Minutes value can only be 0-59.
-            if (_timeToValidate > 0) {
-                const _min = _timeToValidate % 100;
-                if (_min < 0 && _min > 59) {
-                    this._validationMessage = 'Invalid minutes part of time value [' + _min + '] - out of range. Valid minute values are 0-59';
-                    return false;
-                }
+            // Valid minutes-in-hour range is 0-59.
+            if (_minutesToValidate && (_minutesToValidate < 0 || _minutesToValidate > 59)) {
+                this._validationMessage = 'Invalid minutes part of time value [' + _minutesToValidate + '] - out of range. Valid minute values are 0-59';
+                return false;
             }
-            // Seconds can only be 0-59.
-            if (typeof _secondsToValidate !== 'undefined'
+            // Valid seconds-in-minute can only be 0-59.
+            if (_secondsToValidate
                 && (_secondsToValidate < 0 || _secondsToValidate > 59)) {
                 this._validationMessage = 'Invalid seconds value [' + _secondsToValidate + '] - out of range. Valid seconds values are 0-59';
                 return false;
             }
-            // Milliseconds can only be 0-999.
+            // Valid milliseconds-in-second can only be 0-999.
             if (typeof _millisecondsToValidate !== 'undefined'
                 && (_millisecondsToValidate < 0 || _millisecondsToValidate > 999)) {
                 this._validationMessage = 'Invalid milliseconds value [' + _millisecondsToValidate + '] - out of range. Valid milliseconds values are 0-999';
@@ -146,41 +154,19 @@ class Time {
      * between 0 and 23.
      */
     get hours() {
-        if (this._time === 0) {
-            return 0;
-        }
-        return (this._time - this._time % 100) / 100;
+        return this._hours;
     }
     /**
      * @returns this Time object's minutes component as a positive integer
      * between 0 and 59.
      */
     get minutes() {
-        if (this._time === 0) {
-            return 0;
-        }
-        return this._time % 100;
-    }
-    /**
-     * @returns today's date with its time component set to this Time.
-     */
-    get asTodaysDate() {
-        const date = new Date();
-        date.setHours(this.hours, this.minutes, this.seconds, this.milliseconds);
-        return date;
-    }
-    /**
-     * @returns this Time object's hours and minutes component as a
-     * positive integer between 0 and 2359. The value does not include
-     * seconds and milliseconds.
-     */
-    get asNumber() {
-        return this._time;
+        return this._minutes;
     }
     /**
      * @returns this Time object's milliseconds component as a positive
      * integer between 0 and 999.
-     */
+    */
     get milliseconds() {
         return this._millis;
     }
@@ -190,6 +176,14 @@ class Time {
      */
     get seconds() {
         return this._secs;
+    }
+    /**
+     * @returns today's date with its time component set to this Time.
+     */
+    get asTodaysDate() {
+        const date = new Date();
+        date.setHours(this.hours, this.minutes, this.seconds, this.milliseconds);
+        return date;
     }
     /**
      * @returns {boolean} The validation status of this Time. true for
@@ -215,6 +209,17 @@ class Time {
         return this._validationMessage;
     }
     /**
+     * Extracts the time component of a Date object and returns a new Time object representing
+     * that time.
+     *
+     * @param _dateTime a Date object.
+     * @returns a new Date object with its time components (hours, minutes, seconda and
+     * milliseconds) set to those of this Time.
+     */
+    static timeFromDate(_dateTime) {
+        return new Time(_dateTime.getHours(), _dateTime.getMinutes(), _dateTime.getSeconds(), _dateTime.getMilliseconds());
+    }
+    /**
      *
      * @param _date The date to which this Time component will be added.
      * @returns a new date object with the year, month and day of _date
@@ -232,7 +237,42 @@ class Time {
      * midnight.
      */
     get milliSecondsSinceMidnight() {
-        return (this.hours * 3600000) + (this.minutes * 60000) + (this.seconds * 1000) + this.milliseconds;
+        return (this.hours * Time.MILLISECONDS_IN_HOUR)
+            + (this.minutes * Time.MILLISECONDS_IN_MINUTE)
+            + (this.seconds * Time.MILLISECONDS_IN_SECOND)
+            + this.milliseconds;
+    }
+    /**
+     * @returns this Time's seconds value divided by
+     * {@link Time.SECONDS_IN_MINUTE} to give a decimal fraction representing
+     * the fraction of time through the hour this Time represents. This may
+     * be useful in positioning UI components meant to visually align with
+     * time measures on a page.
+     */
+    get secondsAsDecimalFractionOfMinute() {
+        return (this.seconds === 0) ? 0 : this.seconds / Time.SECONDS_IN_MINUTE;
+    }
+    /**
+     * @returns this Time's minutes value divided by
+     * {@link Time.MINUTES_IN_HOUR} to give a decimal fraction representing
+     * the fraction of time through the hour this Time represents. This may
+     * be useful in positioning UI components meant to visually align with
+     * time measures on a page.
+     */
+    get minutesAsDecimalFractionOfHour() {
+        return (this.minutes === 0) ? 0 : this.minutes / Time.MINUTES_IN_HOUR;
+    }
+    /**
+     * @returns this Time's millisecondsSinceMidnight value divided by
+     * {@link Time.MILLISECONDS_IN_DAY} to give a decimal fraction
+     * representing the fraction of a day this Time represents. This may be
+     * useful in positioning UI components meant to visually align with time
+     * measures on a page.
+     */
+    get asDecimalFractionOfDay() {
+        if (this.milliSecondsSinceMidnight === 0)
+            return 0;
+        return this.milliSecondsSinceMidnight / Time.MILLISECONDS_IN_DAY;
     }
     /**
      * Adds (or subtracts) the hours, minutes, seconds and milliseconds
@@ -340,16 +380,14 @@ class Time {
         // we decrement the millisecond total so we don't add it multiple 
         // times.
         // Hours
-        const newHours = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_HOUR) * 100;
+        const newHours = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_HOUR);
         finalTime -= newHours * Time.MILLISECONDS_IN_HOUR;
         const newMinutes = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_MINUTE);
-        // Remember that this class stores the hours and minutes part as
-        // one number.
-        const newTime = newHours + newMinutes;
         finalTime -= newMinutes * Time.MILLISECONDS_IN_MINUTE;
         const newSeconds = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_SECOND);
         const newMilliseconds = finalTime - this.timeToInteger(newSeconds * Time.MILLISECONDS_IN_SECOND);
-        this._time = newTime;
+        this._hours = newHours;
+        this._minutes = newMinutes;
         this._secs = newSeconds;
         this._millis = newMilliseconds;
     }

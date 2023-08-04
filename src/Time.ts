@@ -91,7 +91,7 @@ export class Time {
    */
   constructor(_initialTimeOrHour: number | string, _initialMinutes?: number, _initialSeconds?: number, _initialMillis?: number);
 
-  constructor(_initialTimeOrHour: number | string, _initialSeconds?: number, _initialMinutes?: number, _initialMillis?: number) {
+  constructor(_initialTimeOrHour: number | string, _initialMinutes?: number, _initialSeconds?: number, _initialMillis?: number) {
     if (!this.isValidTime(_initialTimeOrHour, _initialMinutes, _initialSeconds, _initialMillis)) {
       this._hours = 0;
       this._minutes = 0;
@@ -106,6 +106,7 @@ export class Time {
       this._minutes = (typeof _initialMinutes !== 'undefined') ? _initialMinutes : this._minutes;
       this._secs = (typeof _initialSeconds !== 'undefined') ? _initialSeconds : this._secs;
       this._millis = (typeof _initialMillis !== 'undefined') ? _initialMillis : this._millis;
+      this._validationMessage = 'Time is valid.';
       return;
     }
 
@@ -131,18 +132,24 @@ export class Time {
          *  match[5] (toUpperCase()) == 'AM|PM'
          * 
          */
-        const ampm = match.findIndex(e => (e.toUpperCase() === 'AM' || e.toUpperCase() === 'PM'));
+        let ampm = match.find(e => typeof e !== 'undefined' && (e.toUpperCase()==='AM'||e.toUpperCase()==='PM'));
+        
+        if(typeof ampm !== 'undefined') {
+          ampm = ampm.toUpperCase();
+        }
 
-        let timeDiddle = +match[1];
+        const filteredMatches: (string | undefined)[] = Array.from(match).filter((m) => m !== undefined && m.toUpperCase() !== 'AM' && m.toUpperCase() !== 'PM');
 
-        if (ampm != -1 && match[ampm].toUpperCase() === 'PM') {
+        let timeDiddle = (typeof filteredMatches[1] !== 'undefined') ? +filteredMatches[1] : 0; 
+
+        if (ampm === 'PM') {
           timeDiddle += (timeDiddle !== 12) ? 12 : 0;
         }
 
         this._hours = timeDiddle;
-        this._minutes = +match[2];
-        this._secs = (typeof match[3] !== 'undefined') ? +match[3] : 0;
-        this._millis = (typeof match[4] !== 'undefined') ? +match[4] : 0;
+        this._minutes = (typeof filteredMatches[2] !== 'undefined') ? +filteredMatches[2] : 0;
+        this._secs = (typeof filteredMatches[3] !== 'undefined') ? +filteredMatches[3] : 0;
+        this._millis = (typeof filteredMatches[4] !== 'undefined') ? +filteredMatches[4] : 0;
       }
     }
   }
@@ -150,7 +157,8 @@ export class Time {
 
   /**
    * 
-   * @param _timeOrHoursToValidate string or whole number representing a time. 
+   * @param _timeOrHoursToValidate string  representing a formatted time
+   * or whole number representing hours in a day (0-23). 
    * 
    * The string version is time formatted in either 12 or 24 hour
    * format. The longest 24-hour form is hh:mi[:ss[.ms]]
@@ -164,16 +172,11 @@ export class Time {
    * 
    * The string value is tested using regex.
    * 
-   * In the number form, hours are the hundreds part and minutes are 
-   * the tens part. When the number form is used and the optional 
-   * parameters are omitted (see below for details on the optional 
-   * parameters), the seconds and milliseconds of this Time will both 
-   * be set to zero (0).
+   * In the number form, the valid range is 0-23 (per 24-our clock). This value will always
+   * be treated as a 24-hour clock hours value. When the number form is used and the optional 
+   * parameters are omitted (see below for details on the optional parameters), the seconds 
+   * and milliseconds of this Time will both be set to zero (0).
    * 
-   * Invalid values (e.g. 999, 777) will fail the validation check.
-   * Valid values are numbers that look visually similar to 24-hour 
-   * clock times with no leading zeros.
-   * e.g. 0,100,101,1000,1101,2045,2156,2359).
    * @param _secondsToValidate Initial seconds component of this Time. 
    * Valid values are 0-59.
    * @param _millisecondsToValidate Initial milliseconds component of this Time.
@@ -309,7 +312,7 @@ export class Time {
    */
   public static timeFromDate(_dateTime: Date): Time {
     return new Time(
-      _dateTime.getHours() * 100 + _dateTime.getMinutes(),
+      _dateTime.getHours(), _dateTime.getMinutes(),
       _dateTime.getSeconds(),
       _dateTime.getMilliseconds());
   }
@@ -485,7 +488,7 @@ export class Time {
     // times.
 
     // Hours
-    const newHours = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_HOUR) * 100;
+    const newHours = this.timeToInteger(finalTime / Time.MILLISECONDS_IN_HOUR);
 
     finalTime -= newHours * Time.MILLISECONDS_IN_HOUR;
 
